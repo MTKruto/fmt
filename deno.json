@@ -1,0 +1,13 @@
+{
+  "name": "@mtkruto/fmt",
+  "version": "0.0.0",
+  "license": "MIT",
+  "exports": {
+    "./entities": "./entities.ts",
+    "./rich": "./rich.ts",
+    "./secret-entities": "./secret_entities.ts"
+  },
+  "imports": {
+    "@mtkruto/mtkruto": "jsr:@mtkruto/mtkruto@^0.197.1"
+  }
+}
