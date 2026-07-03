@@ -9,5 +9,8 @@
   },
   "imports": {
     "@mtkruto/mtkruto": "jsr:@mtkruto/mtkruto@^0.197.1"
+  },
+  "fmt": {
+    "lineWidth": 9999
   }
 }

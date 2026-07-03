@@ -1,4 +1,4 @@
-import type { RichTextComponent ,PageBlock, PageBlockCaption, PageBlockListItem, PageBlockOrderedListItem, PageBlockTableRow } from "@mtkruto/mtkruto";
+import type { PageBlock, PageBlockCaption, PageBlockListItem, PageBlockOrderedListItem, PageBlockTableRow, RichTextComponent } from "@mtkruto/mtkruto";
 
 type RichTextComponentInput = RichTextComponent | RichTextComponent[] | string;
 type PageBlockCaptionInput = PageBlockCaption | RichTextComponentInput | { text?: RichTextComponentInput; credit?: RichTextComponentInput };
