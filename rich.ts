@@ -1,9 +1,11 @@
-import type { PageBlock, PageBlockCaption, PageBlockListItem, PageBlockOrderedListItem, PageBlockTableRow, RichTextComponent } from "@mtkruto/mtkruto";
+import type { PageBlock, PageBlockCaption, PageBlockListItem, PageBlockOrderedListItem, PageBlockTableCell, PageBlockTableRow, RichTextComponent } from "@mtkruto/mtkruto";
 
-type RichTextComponentInput = RichTextComponent | RichTextComponent[] | string;
+export type RichTextComponentInput = RichTextComponent | RichTextComponent[] | string;
 type PageBlockCaptionInput = PageBlockCaption | RichTextComponentInput | { text?: RichTextComponentInput; credit?: RichTextComponentInput };
 type RichTextComponentOf<T extends RichTextComponent["type"]> = Extract<RichTextComponent, { type: T }>;
 type PageBlockOf<T extends PageBlock["type"]> = Extract<PageBlock, { type: T }>;
+export type PageBlockTableCellInput = RichTextComponentInput | (Partial<Omit<PageBlockTableCell, "text">> & { text?: RichTextComponentInput });
+export type PageBlockTableRowInput = PageBlockTableRow | PageBlockTableCellInput[];
 
 function richTextComponent(input: RichTextComponentInput): RichTextComponent {
   if (typeof input === "string") {
@@ -24,6 +26,36 @@ function pageBlockCaption(input: PageBlockCaptionInput = ""): PageBlockCaption {
     text: richTextComponent(input.text ?? ""),
     credit: richTextComponent(input.credit ?? ""),
   };
+}
+
+function pageBlockTableCell(input: PageBlockTableCellInput = "", options: Partial<Omit<PageBlockTableCell, "text">> = {}): PageBlockTableCell {
+  if (typeof input === "string" || Array.isArray(input) || "type" in input) {
+    return {
+      isHeader: options.isHeader ?? false,
+      isCenterAligned: options.isCenterAligned ?? false,
+      isRightAligned: options.isRightAligned ?? false,
+      isMiddleVerticallyAligned: options.isMiddleVerticallyAligned ?? false,
+      isBottomVerticallyAligned: options.isBottomVerticallyAligned ?? false,
+      text: richTextComponent(input),
+      colspan: options.colspan,
+      rowspan: options.rowspan,
+    };
+  }
+
+  return {
+    isHeader: options.isHeader ?? input.isHeader ?? false,
+    isCenterAligned: options.isCenterAligned ?? input.isCenterAligned ?? false,
+    isRightAligned: options.isRightAligned ?? input.isRightAligned ?? false,
+    isMiddleVerticallyAligned: options.isMiddleVerticallyAligned ?? input.isMiddleVerticallyAligned ?? false,
+    isBottomVerticallyAligned: options.isBottomVerticallyAligned ?? input.isBottomVerticallyAligned ?? false,
+    text: input.text === undefined ? undefined : richTextComponent(input.text),
+    colspan: options.colspan ?? input.colspan,
+    rowspan: options.rowspan ?? input.rowspan,
+  };
+}
+
+function pageBlockTableRow(input: PageBlockTableRowInput): PageBlockTableRow {
+  return Array.isArray(input) ? { cells: input.map((cell) => pageBlockTableCell(cell)) } : { cells: input.cells.map((cell) => pageBlockTableCell(cell)) };
 }
 
 function isRichTextComponent(value: PageBlock | RichTextComponent): value is RichTextComponent {
@@ -351,8 +383,8 @@ export class PageBlockBuilder extends Array<PageBlock> {
   }
 
   /** A table page block. */
-  table(title: RichTextComponentInput, rows: PageBlockTableRow[], options: Partial<Omit<PageBlockOf<"table">, "type" | "title" | "rows">> = {}): this {
-    return this.add({ type: "table", title: richTextComponent(title), rows, isBordered: options.isBordered ?? false, isStriped: options.isStriped ?? false });
+  table(title: RichTextComponentInput, rows: PageBlockTableRowInput[], options: Partial<Omit<PageBlockOf<"table">, "type" | "title" | "rows">> = {}): this {
+    return this.add({ type: "table", title: richTextComponent(title), rows: rows.map((row) => pageBlockTableRow(row)), isBordered: options.isBordered ?? false, isStriped: options.isStriped ?? false });
   }
 
   /** An order list page block. */
@@ -569,8 +601,21 @@ export function kicker(text: RichTextComponentInput): PageBlockBuilder {
 }
 
 /** A table page block. */
-export function table(title: RichTextComponentInput, rows: PageBlockTableRow[], options: Partial<Omit<PageBlockOf<"table">, "type" | "title" | "rows">> = {}): PageBlockBuilder {
+export function table(title: RichTextComponentInput, rows: PageBlockTableRowInput[], options: Partial<Omit<PageBlockOf<"table">, "type" | "title" | "rows">> = {}): PageBlockBuilder {
   return pageBlockBuilder().table(title, rows, options);
+}
+
+/** A table cell. */
+export function cell(text?: RichTextComponentInput, options?: Partial<Omit<PageBlockTableCell, "text">>): PageBlockTableCell;
+/** A table cell. */
+export function cell(options?: Partial<Omit<PageBlockTableCell, "text">> & { text?: RichTextComponentInput }): PageBlockTableCell;
+export function cell(textOrOptions: PageBlockTableCellInput = "", options: Partial<Omit<PageBlockTableCell, "text">> = {}): PageBlockTableCell {
+  return pageBlockTableCell(textOrOptions, options);
+}
+
+/** A table row. */
+export function row(cells: PageBlockTableCellInput[]): PageBlockTableRow {
+  return pageBlockTableRow(cells);
 }
 
 /** An order list page block. */
